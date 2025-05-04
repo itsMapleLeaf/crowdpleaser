@@ -1,4 +1,6 @@
 {
+	"type": "module",
+	"private": true,
 	"dependencies": {
 		"es-toolkit": "^1.37.2",
 		"ink": "^5.2.1",
