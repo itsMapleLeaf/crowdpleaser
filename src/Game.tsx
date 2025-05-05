@@ -39,23 +39,61 @@ export function Game() {
 				</Box>
 			)}
 
-			<Menu
-				options={[
-					...state.hand.map((card, index) => ({
-						label: `${card.name} (${card.cost}): ${card.description}`,
-						disabled: card.cost > state.stamina,
-						action: () => {
-							setState((state) => playTechniqueFromHand(state, index))
+			{state.status === "playing" ? (
+				<Menu
+					options={[
+						...state.hand.map((card, index) => ({
+							label: `${card.name} (${card.cost}): ${card.description}`,
+							disabled: card.cost > state.stamina,
+							action: () => {
+								setState((state) => playTechniqueFromHand(state, index))
+							},
+						})),
+						{
+							label: "Pass",
+							action: () => {
+								setState(passTurn)
+							},
 						},
-					})),
-					{
-						label: "Pass",
-						action: () => {
-							setState(passTurn)
-						},
-					},
-				]}
-			/>
+					]}
+				/>
+			) : state.status === "complete" ? (
+				<>
+					<Text color="green">Performance complete!</Text>
+					<Menu
+						options={[
+							{
+								label: "Retry",
+								action: () => setState(createGameState),
+							},
+							{
+								label: "Quit",
+								action: () => {
+									process.exit(0)
+								},
+							},
+						]}
+					/>
+				</>
+			) : state.status === "failed" ? (
+				<>
+					<Text color="red">Performance failed: audience lost.</Text>
+					<Menu
+						options={[
+							{
+								label: "Retry",
+								action: () => setState(createGameState),
+							},
+							{
+								label: "Quit",
+								action: () => {
+									process.exit(0)
+								},
+							},
+						]}
+					/>
+				</>
+			) : null}
 		</Box>
 	)
 }

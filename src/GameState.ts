@@ -91,24 +91,21 @@ export function passTurn(currentState: GameState): GameState {
 		return { ...currentState, status: "failed" }
 	}
 
-	let state = { ...currentState }
+	let state = produce(currentState, (draft) => {
+		draft.audience += draft.momentum
+		draft.cheers += draft.audience
+	})
 
-	// energize (apply momentum to audience, apply audience to cheers)
-	state.audience += state.momentum
-	state.cheers += state.audience
-
-	// if at max rounds, end
 	if (state.round === maxRounds) {
 		return { ...state, status: "complete" }
 	}
 
-	// otherwise, set up next round, +3 stamina and draw
-	state.stamina += staminaGain
-	state.round += 1
+	state = produce(state, (draft) => {
+		draft.round += 1
+		draft.stamina += staminaGain
+	})
 	state = discardHand(state)
 	state = drawCards(state, drawCount)
-
-	// choose new setback (todo)
 
 	return state
 }
