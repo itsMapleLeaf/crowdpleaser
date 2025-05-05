@@ -2,6 +2,7 @@ import { Box, Text } from "ink"
 import { useState } from "react"
 import {
 	createGameState,
+	getComputedHand,
 	maxRounds,
 	passTurn,
 	playTechniqueFromHand,
@@ -11,6 +12,7 @@ import { Menu } from "./Menu.tsx"
 
 export function Game() {
 	const [state, setState] = useState<GameState>(createGameState)
+	const hand = getComputedHand(state)
 
 	return (
 		<Box flexDirection="column" gap={1}>
@@ -42,7 +44,7 @@ export function Game() {
 			{state.status === "playing" ? (
 				<Menu
 					options={[
-						...state.hand.map((card, index) => ({
+						...hand.map((card, index) => ({
 							label: `${card.name} (${card.cost}): ${card.description}`,
 							disabled: card.cost > state.stamina,
 							action: () => {
@@ -50,7 +52,7 @@ export function Game() {
 							},
 						})),
 						{
-							label: "Pass",
+							label: "Next Round",
 							action: () => {
 								setState(passTurn)
 							},
@@ -95,16 +97,19 @@ export function Game() {
 				</>
 			) : null}
 
-			<Box flexDirection="column-reverse">
-				{state.messages.slice(0, 10).map((message, index) => (
-					<Text
-						key={index}
-						color={message.recent ? "green" : undefined}
-						dimColor={!message.recent}
-					>
-						{message.text}
-					</Text>
-				))}
+			<Box flexDirection="column">
+				{state.messages
+					.toReversed()
+					.slice(0, 10)
+					.map((message, index) => (
+						<Text
+							key={index}
+							color={message.recent ? "green" : undefined}
+							dimColor={!message.recent}
+						>
+							{message.text}
+						</Text>
+					))}
 			</Box>
 		</Box>
 	)

@@ -25,9 +25,10 @@ export type GameState = Readonly<{
 export type GameEffect = {
 	name: string
 	source: string
+	handDuration?: number
 	combo?: (state: GameState) => Partial<GameState>
 	interceptUpdate?: (previous: GameState, next: GameState) => Partial<GameState>
-	computeTechnique?: (technique: Technique) => Partial<Technique>
+	modifyTechnique?: (technique: Technique) => Partial<Technique>
 }
 
 export type GameMessage = {
@@ -59,8 +60,9 @@ export function playTechniqueFromHand(
 	index: number,
 ): GameState {
 	let state = currentState
+	const hand = getComputedHand(state)
 
-	const technique = state.hand[index]
+	const technique = hand[index]
 	if (!technique) {
 		throw new Error(`card at index ${index} does not exist`, {
 			cause: { state, index },
@@ -93,6 +95,17 @@ export function playTechniqueFromHand(
 	}
 
 	state = produce(state, (draft) => {
+		// decrease hand duration for current effects
+		for (const effect of draft.effects) {
+			if (effect.handDuration != null) {
+				effect.handDuration -= 1
+			}
+		}
+
+		// remove expired effects
+		draft.effects = draft.effects.filter((it) => it.handDuration !== 0)
+
+		// add queued effects for next hand
 		draft.effects.push(...draft.pendingEffects.splice(0))
 
 		// unmark recent messages so they show dimmed again
@@ -162,4 +175,12 @@ export function energize(state: GameState): GameState {
 		...state,
 		cheers: state.cheers + state.audience,
 	}
+}
+
+export function getComputedHand(state: GameState) {
+	return state.effects.reduce((hand, { modifyTechnique }) => {
+		return modifyTechnique
+			? hand.map((it) => ({ ...it, ...modifyTechnique(it) }))
+			: hand
+	}, state.hand)
 }
