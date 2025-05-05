@@ -1,23 +1,16 @@
 import { Box, Text } from "ink"
+import { observer } from "mobx-react-lite"
 import { useState } from "react"
-import {
-	createGameState,
-	getResolvedHand,
-	maxRounds,
-	passTurn,
-	playTechniqueFromHand,
-	type GameState,
-} from "./GameState.ts"
+import { GameState } from "./GameState.ts"
 import { Menu } from "./Menu.tsx"
 
-export function Game() {
-	const [state, setState] = useState<GameState>(createGameState)
-	const hand = getResolvedHand(state)
+export const Game = observer(function Game() {
+	const [state, setState] = useState(() => new GameState())
 
 	return (
 		<Box flexDirection="column" gap={1}>
 			<Text>
-				Round: {state.round}/{maxRounds}
+				Round: {state.round}/{GameState.maxRounds}
 			</Text>
 
 			<Box flexDirection="column">
@@ -44,18 +37,14 @@ export function Game() {
 			{state.status === "playing" ? (
 				<Menu
 					options={[
-						...hand.map((card, index) => ({
+						...state.resolvedHand.map((card, index) => ({
 							label: `${card.name} (${card.cost}): ${card.description}`,
 							disabled: card.cost > state.stamina,
-							action: () => {
-								setState((state) => playTechniqueFromHand(state, index))
-							},
+							action: () => state.playTechniqueFromHand(index),
 						})),
 						{
 							label: "Next Round",
-							action: () => {
-								setState(passTurn)
-							},
+							action: () => state.nextRound(),
 						},
 					]}
 				/>
@@ -65,8 +54,8 @@ export function Game() {
 					<Menu
 						options={[
 							{
-								label: "Retry",
-								action: () => setState(createGameState),
+								label: "Play Again",
+								action: () => setState(() => new GameState()),
 							},
 							{
 								label: "Quit",
@@ -83,8 +72,8 @@ export function Game() {
 					<Menu
 						options={[
 							{
-								label: "Retry",
-								action: () => setState(createGameState),
+								label: "Play Again",
+								action: () => setState(() => new GameState()),
 							},
 							{
 								label: "Quit",
@@ -113,4 +102,4 @@ export function Game() {
 			</Box>
 		</Box>
 	)
-}
+})

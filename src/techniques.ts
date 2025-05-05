@@ -1,10 +1,4 @@
-import {
-	addPendingEffect,
-	discardHand,
-	drawCards,
-	energize,
-	type GameState,
-} from "./GameState.ts"
+import { type GameState } from "./GameState.ts"
 import type { MaybeFunction } from "./types.ts"
 
 export type Technique = {
@@ -12,15 +6,10 @@ export type Technique = {
 	description: string
 	cost: number
 	replay?: number
-	play: (state: GameState) => Partial<GameState>
+	play: (state: GameState) => void
 }
 
 export type TechniqueResolvable = MaybeFunction<[state: GameState], Technique>
-
-export type TechniqueEffect =
-	| { type: "updateState"; patch: Partial<GameState> }
-	| { type: "draw"; count: number }
-	| { type: "discardHand" }
 
 export const techniques: TechniqueResolvable[] = [
 	// bocchi (focus: techniques)
@@ -28,17 +17,18 @@ export const techniques: TechniqueResolvable[] = [
 		name: "Take a Breather",
 		description: `Draw 3 techniques`,
 		cost: 2,
-		play: (state) => drawCards(state, 3),
+		play: (state) => {
+			state.draw(3)
+		},
 	},
 	{
 		name: "Indecision",
 		description: `Discard all techniques, then draw 1 per discarded technique`,
 		cost: 1,
 		play: (state) => {
-			const count = state.hand.length
-			state = discardHand(state)
-			state = drawCards(state, count)
-			return state
+			const count = state.resolvedHand.length
+			state.discardHand()
+			state.draw(count)
 		},
 	},
 	// {
@@ -67,7 +57,9 @@ export const techniques: TechniqueResolvable[] = [
 		name: "Appeal",
 		cost: 1,
 		description: "+7 Audience",
-		play: (state) => ({ audience: state.audience + 7 }),
+		play: (state) => {
+			state.audience += 7
+		},
 	},
 	// {
 	// 	name: "Dress to Impress",
@@ -96,7 +88,9 @@ export const techniques: TechniqueResolvable[] = [
 		cost: 2,
 		description: `Replay 2: Energize`,
 		replay: 2,
-		play: (state) => energize(state),
+		play: (state) => {
+			state.energize()
+		},
 	},
 
 	// dorito (momentum)
@@ -105,10 +99,12 @@ export const techniques: TechniqueResolvable[] = [
 		cost: 2,
 		description: `Combo: +1 Momentum`,
 		play: (state) => {
-			return addPendingEffect(state, {
+			state.addPendingEffect({
 				name: "Combo: +1 Momentum",
 				source: "Patience",
-				combo: (state) => ({ momentum: state.momentum + 1 }),
+				combo: (state) => {
+					state.momentum += 1
+				},
 			})
 		},
 	},
@@ -153,7 +149,7 @@ export const techniques: TechniqueResolvable[] = [
 		cost: 1,
 		description: `Next technique costs 0 stamina`,
 		play: (state) => {
-			return addPendingEffect(state, {
+			state.addPendingEffect({
 				name: "Next technique costs 0 stamina",
 				source: "Cutting Corners",
 				handDuration: 1,
@@ -170,7 +166,9 @@ export const techniques: TechniqueResolvable[] = [
 			name: "Do What Works",
 			cost: 2,
 			description: `Replay your last played technique (${lastPlayedDescription})`,
-			play: (state) => lastPlayed?.play(state) ?? {},
+			play: (state) => {
+				lastPlayed?.play(state)
+			},
 		}
 	},
 	// {
