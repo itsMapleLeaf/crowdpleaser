@@ -1,4 +1,4 @@
-import { shuffle } from "es-toolkit"
+import { range, shuffle } from "es-toolkit"
 import { type Technique, techniques } from "./techniques.ts"
 
 const staminaGain = 3
@@ -62,7 +62,10 @@ export function playTechniqueFromHand(
 		stamina: state.stamina - technique.cost,
 	}
 
-	state = { ...state, ...technique.play(state) }
+	for (const _ of range(technique.replay ?? 1)) {
+		state = { ...state, ...technique.play(state) }
+		// todo: apply combo
+	}
 
 	return state
 }
