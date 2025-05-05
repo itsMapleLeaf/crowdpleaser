@@ -1,19 +1,26 @@
-import { range, shuffle } from "es-toolkit"
+import { randomInt, range, shuffle } from "es-toolkit"
 import { makeAutoObservable } from "mobx"
+import { setbacks, type Setback } from "./setbacks.ts"
 import {
 	resolveTechnique,
+	techniques,
 	type Technique,
 	type TechniqueResolvable,
-	techniques,
 } from "./techniques.ts"
+import { raise } from "./utils.ts"
 
 export type GameEffect = {
 	name: string
 	source: string
 	handDuration?: number
+	roundDuration?: number
 	combo?: (state: GameState) => void
-	interceptUpdate?: (previous: GameState, next: GameState) => void
 	modifyTechnique?: (technique: Technique) => Partial<Technique>
+	/**
+	 * @param current The game object before the update; capture any necessary state in this callback
+	 * @returns A callback which gets called after the update, to make whatever post-update changes are needed
+	 */
+	interceptUpdate?: (current: GameState) => (next: GameState) => void
 }
 
 export type GameMessage = {
@@ -38,7 +45,7 @@ export class GameState {
 	pendingEffects: GameEffect[] = [] // new effects that will be applied on following hand
 	playedTechniques: Technique[] = []
 	messages: GameMessage[] = []
-	// lastSetback?: Setback;
+	setback?: Setback
 
 	constructor() {
 		makeAutoObservable(this)
@@ -88,6 +95,10 @@ export class GameState {
 				messages.push(text + replaySuffix)
 			}
 
+			const interceptUpdatePostCallbacks = this.effects.flatMap(
+				(effect) => effect.interceptUpdate?.(this) ?? [],
+			)
+
 			technique.play(this)
 			addMessage(`Played: ${technique.name} (${technique.description})`)
 
@@ -96,6 +107,10 @@ export class GameState {
 					effect.combo(this)
 					addMessage(`Effect: ${effect.name} (from ${effect.source})`)
 				}
+			}
+
+			for (const callback of interceptUpdatePostCallbacks) {
+				callback(this)
 			}
 		}
 
@@ -138,9 +153,21 @@ export class GameState {
 			return
 		}
 
+		this.setback =
+			setbacks[randomInt(setbacks.length)] ?? raise(`no setbacks found`)
+		this.setback.apply?.(this)
+
+		for (const effect of this.effects) {
+			if (effect.roundDuration) {
+				effect.roundDuration -= 1
+			}
+		}
+		this.effects = this.effects.filter((effect) => effect.roundDuration !== 0)
+
+		this.effects.push(...this.pendingEffects.splice(0))
+
 		this.round += 1
 		this.stamina += GameState.staminaGain
-
 		this.discardHand()
 		this.draw(GameState.drawCount)
 	}
