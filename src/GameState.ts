@@ -40,6 +40,11 @@ export type GameMessage = {
 	recent?: boolean
 }
 
+type PlayedTechnique = {
+	technique: Technique
+	round: number
+}
+
 export class GameState {
 	static readonly staminaGain = 3
 	static readonly drawCount = 4
@@ -48,6 +53,7 @@ export class GameState {
 	status: "playing" | "complete" | "failed" = "playing"
 	deck: TechniqueResolvable[] = []
 	baseHand: TechniqueResolvable[] = []
+	techniqueHistory: PlayedTechnique[] = []
 	cheers = 0
 	audience = 10
 	momentum = 0
@@ -55,7 +61,6 @@ export class GameState {
 	round = 1
 	effects: GameEffect[] = []
 	pendingEffects: GameEffect[] = [] // new effects that will be applied on following hand
-	playedTechniques: Technique[] = []
 	messages: GameMessage[] = []
 	setback?: Setback
 
@@ -148,7 +153,7 @@ export class GameState {
 		this.messages.push(...messages.map((text) => ({ text, recent: true })))
 
 		// Update played techniques
-		this.playedTechniques.push(technique)
+		this.techniqueHistory.push({ technique, round: this.round })
 	}
 
 	nextRound() {
