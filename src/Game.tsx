@@ -2,7 +2,7 @@ import { Box, Text } from "ink"
 import { useState } from "react"
 import {
 	createGameState,
-	getComputedHand,
+	getResolvedHand,
 	maxRounds,
 	passTurn,
 	playTechniqueFromHand,
@@ -12,7 +12,7 @@ import { Menu } from "./Menu.tsx"
 
 export function Game() {
 	const [state, setState] = useState<GameState>(createGameState)
-	const hand = getComputedHand(state)
+	const hand = getResolvedHand(state)
 
 	return (
 		<Box flexDirection="column" gap={1}>

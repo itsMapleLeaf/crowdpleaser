@@ -1,6 +1,11 @@
 import { range, shuffle } from "es-toolkit"
 import { produce } from "immer"
-import { type Technique, techniques } from "./techniques.ts"
+import {
+	resolveTechnique,
+	type Technique,
+	type TechniqueResolvable,
+	techniques,
+} from "./techniques.ts"
 
 const staminaGain = 3
 const drawCount = 4
@@ -8,8 +13,8 @@ export const maxRounds = 5
 
 export type GameState = Readonly<{
 	status: "playing" | "complete" | "failed"
-	deck: readonly Technique[]
-	hand: readonly Technique[]
+	deck: readonly TechniqueResolvable[]
+	hand: readonly TechniqueResolvable[]
 	cheers: number
 	audience: number
 	momentum: number
@@ -60,9 +65,10 @@ export function playTechniqueFromHand(
 	index: number,
 ): GameState {
 	let state = currentState
-	const hand = getComputedHand(state)
+	const hand = getResolvedHand(state)
 
-	const technique = hand[index]
+	let technique = hand[index]
+	technique &&= resolveTechnique(technique, state)
 	if (!technique) {
 		throw new Error(`card at index ${index} does not exist`, {
 			cause: { state, index },
@@ -115,6 +121,9 @@ export function playTechniqueFromHand(
 
 		// add new messages as recent
 		draft.messages.push(...messages.map((text) => ({ text, recent: true })))
+
+		// update played techniques
+		draft.playedTechniques.push(technique)
 	})
 
 	return state
@@ -177,10 +186,15 @@ export function energize(state: GameState): GameState {
 	}
 }
 
-export function getComputedHand(state: GameState) {
-	return state.effects.reduce((hand, { modifyTechnique }) => {
-		return modifyTechnique
-			? hand.map((it) => ({ ...it, ...modifyTechnique(it) }))
-			: hand
-	}, state.hand)
+export function getResolvedHand(state: GameState): readonly Technique[] {
+	let resolved = state.hand.map((it) => resolveTechnique(it, state))
+	for (const effect of state.effects) {
+		if (effect.modifyTechnique) {
+			resolved = resolved.map((it) => ({
+				...it,
+				...effect.modifyTechnique?.(it),
+			}))
+		}
+	}
+	return resolved
 }

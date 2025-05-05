@@ -5,6 +5,7 @@ import {
 	energize,
 	type GameState,
 } from "./GameState.ts"
+import type { MaybeFunction } from "./types.ts"
 
 export type Technique = {
 	name: string
@@ -12,15 +13,16 @@ export type Technique = {
 	cost: number
 	replay?: number
 	play: (state: GameState) => Partial<GameState>
-	computed?: (state: GameState) => Technique // how this card actually renders while in hand
 }
+
+export type TechniqueResolvable = MaybeFunction<[state: GameState], Technique>
 
 export type TechniqueEffect =
 	| { type: "updateState"; patch: Partial<GameState> }
 	| { type: "draw"; count: number }
 	| { type: "discardHand" }
 
-export const techniques: Technique[] = [
+export const techniques: TechniqueResolvable[] = [
 	// bocchi (focus: techniques)
 	{
 		name: "Take a Breather",
@@ -159,16 +161,18 @@ export const techniques: Technique[] = [
 			})
 		},
 	},
-	// {
-	// 	name: "Do What Works",
-	// 	cost: 2,
-	// 	description: `Replay your last played technique`,
-	// 	excludeFromLastPlayed: true,
-	// 	onPlay: (state) => {
-	// 		const lastPlayed = game.playedTechniques.at(-1)
-	// 		if (lastPlayed) game.playTechnique(lastPlayed)
-	// 	},
-	// },
+	(state) => {
+		const lastPlayed = state.playedTechniques.findLast(
+			(it) => it.name !== "Do What Works",
+		)
+		const lastPlayedDescription = lastPlayed?.description ?? "Nothing"
+		return {
+			name: "Do What Works",
+			cost: 2,
+			description: `Replay your last played technique (${lastPlayedDescription})`,
+			play: (state) => lastPlayed?.play(state) ?? {},
+		}
+	},
 	// {
 	// 	name: "They Just Don't Get It",
 	// 	cost: 0,
@@ -180,3 +184,10 @@ export const techniques: Technique[] = [
 	// 	},
 	// },
 ]
+
+export function resolveTechnique(
+	resolvable: TechniqueResolvable,
+	state: GameState,
+): Technique {
+	return resolvable instanceof Function ? resolvable(state) : resolvable
+}
