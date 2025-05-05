@@ -93,10 +93,20 @@ export const Game = observer(function Game() {
 			) : null}
 
 			<Box flexDirection="column">
-				{state.messages
-					.toReversed()
-					.slice(0, 10)
-					.map((message, index) => (
+				{(() => {
+					// make sure all recent messagse are shown,
+					// but if there are less than 10,
+					// show old messages up to 10
+					const messages = []
+					for (const message of state.messages.toReversed()) {
+						if (message.recent || messages.length < 10) {
+							messages.push(message)
+						} else {
+							break
+						}
+					}
+
+					return messages.map((message, index) => (
 						<Text
 							key={index}
 							color={message.recent ? "green" : undefined}
@@ -104,7 +114,8 @@ export const Game = observer(function Game() {
 						>
 							{message.text}
 						</Text>
-					))}
+					))
+				})()}
 			</Box>
 		</Box>
 	)
