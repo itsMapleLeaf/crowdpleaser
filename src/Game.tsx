@@ -94,6 +94,18 @@ export function Game() {
 					/>
 				</>
 			) : null}
+
+			<Box flexDirection="column-reverse">
+				{state.messages.slice(0, 10).map((message, index) => (
+					<Text
+						key={index}
+						color={message.recent ? "green" : undefined}
+						dimColor={!message.recent}
+					>
+						{message.text}
+					</Text>
+				))}
+			</Box>
 		</Box>
 	)
 }

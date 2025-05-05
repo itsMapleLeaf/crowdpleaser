@@ -72,15 +72,36 @@ export function playTechniqueFromHand(
 		draft.stamina -= technique.cost
 	})
 
-	for (const _ of range(technique.replay ?? 1)) {
+	const messages: string[] = []
+
+	for (const replayNumber of range(technique.replay ?? 1)) {
+		const addMessage = (text: string) => {
+			const replaySuffix =
+				replayNumber > 0 ? ` (Replay ${replayNumber + 1})` : ""
+			messages.push(text + replaySuffix)
+		}
+
 		state = { ...state, ...technique.play(state) }
+		addMessage(`Played: ${technique.name} (${technique.description})`)
+
 		for (const effect of state.effects) {
-			state = { ...state, ...effect.combo?.(state) }
+			if (effect.combo) {
+				state = { ...state, ...effect.combo(state) }
+				addMessage(`Effect: ${effect.name} (from ${effect.source})`)
+			}
 		}
 	}
 
 	state = produce(state, (draft) => {
 		draft.effects.push(...draft.pendingEffects.splice(0))
+
+		// unmark recent messages so they show dimmed again
+		for (const message of draft.messages) {
+			message.recent = false
+		}
+
+		// add new messages as recent
+		draft.messages.push(...messages.map((text) => ({ text, recent: true })))
 	})
 
 	return state
