@@ -122,7 +122,7 @@ export class GameState {
 			}
 
 			for (const gen of interceptUpdateGenerators) {
-				gen.next()
+				gen.next?.()
 			}
 		}
 
