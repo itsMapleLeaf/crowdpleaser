@@ -20,6 +20,12 @@ export const Game = observer(function Game() {
 				<Text>Stamina: {state.stamina}</Text>
 			</Box>
 
+			{state.setback && (
+				<Text>
+					Setback: {state.setback.name} ({state.setback.description})
+				</Text>
+			)}
+
 			{state.effects.length > 0 && (
 				<Box flexDirection="column">
 					<Text>Effects:</Text>
