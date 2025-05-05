@@ -9,7 +9,7 @@
 
 		"target": "ESNext",
 		// "lib": [],
-		// "jsx": "preserve",
+		"jsx": "preserve",
 		// "libReplacement": true,
 		// "experimentalDecorators": true,
 		// "emitDecoratorMetadata": true,
@@ -19,7 +19,7 @@
 		// "reactNamespace": "",
 		// "noLib": true,
 		// "useDefineForClassFields": true,
-		// "moduleDetection": "auto",
+		"moduleDetection": "force",
 
 		"module": "Preserve",
 		// "rootDir": "./",
@@ -99,5 +99,6 @@
 
 		// "skipDefaultLibCheck": true,
 		"skipLibCheck": true
-	}
+	},
+	"include": ["src"]
 }

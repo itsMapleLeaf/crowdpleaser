@@ -1,0 +1,11 @@
+- Round: player can play a number of cards, then manually passes the round
+- Cheers: the player's score
+- Audience: number of members in the audience, added to cheers after each round
+- Momentum: added to audience after each round
+- Stamina: required to play cards, subtracted before the card effect applies
+- Technique: a card in hand or deck
+- Draw: take a technique from the deck and put it in hand
+- Discard: take a technique and put it at the bottom of the deck
+- Energize: +1 cheer per audience, also happens at the end of every round
+- Combo: variant of sustain, describes an effect happens after playing a card
+- Replay X: applies this effect X times, each time triggers combo effects
