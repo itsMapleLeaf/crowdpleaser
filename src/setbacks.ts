@@ -8,10 +8,10 @@ export type Setback = {
 
 export const setbacks: Setback[] = [
 	{
-		name: "High Expectations",
-		description: `-3 momentum`,
+		name: "Not Feeling It",
+		description: `-10 momentum`,
 		apply: (state) => {
-			state.momentum -= 3
+			state.momentum -= 10
 		},
 	},
 	{
