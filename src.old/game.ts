@@ -77,8 +77,8 @@ export class Game {
 			operation === "set"
 				? value
 				: this.#momentum +
-				  (value > 0 &&
-				  this.activeEffects.some((effect) => effect.disableMomentumGain)
+					(value > 0 &&
+					this.activeEffects.some((effect) => effect.disableMomentumGain)
 						? 0
 						: value)
 	}
