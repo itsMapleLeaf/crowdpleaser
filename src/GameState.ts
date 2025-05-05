@@ -1,4 +1,4 @@
-import { randomInt, range, shuffle } from "es-toolkit"
+import { mapValues, pick, randomInt, range, shuffle } from "es-toolkit"
 import { makeAutoObservable } from "mobx"
 import { setbacks, type Setback } from "./setbacks.ts"
 import {
@@ -63,6 +63,7 @@ export class GameState {
 	pendingEffects: GameEffect[] = [] // new effects that will be applied on following hand
 	messages: GameMessage[] = []
 	setback?: Setback
+	changes: Record<string, number> = {}
 
 	constructor() {
 		makeAutoObservable(this)
@@ -100,60 +101,62 @@ export class GameState {
 			})
 		}
 
-		this.deck.push(...this.baseHand.splice(index, 1))
-		this.stamina -= technique.cost
+		this.trackChanges(() => {
+			this.deck.push(...this.baseHand.splice(index, 1))
+			this.stamina -= technique.cost
 
-		const messages: string[] = []
+			const messages: string[] = []
 
-		for (const replayNumber of range(technique.replay ?? 1)) {
-			const addMessage = (text: string) => {
-				const replaySuffix =
-					replayNumber != null ? ` (Replay ${replayNumber + 1})` : ""
-				messages.push(text + replaySuffix)
-			}
+			for (const replayNumber of range(technique.replay ?? 1)) {
+				const addMessage = (text: string) => {
+					const replaySuffix =
+						replayNumber != null ? ` (Replay ${replayNumber + 1})` : ""
+					messages.push(text + replaySuffix)
+				}
 
-			const interceptUpdateGenerators = this.effects.flatMap(
-				(effect) => effect.interceptUpdate?.(this) ?? [],
-			)
+				const interceptUpdateGenerators = this.effects.flatMap(
+					(effect) => effect.interceptUpdate?.(this) ?? [],
+				)
 
-			technique.play(this)
-			addMessage(`Played: ${technique.name} (${technique.description})`)
+				technique.play(this)
+				addMessage(`Played: ${technique.name} (${technique.description})`)
 
-			for (const effect of this.effects) {
-				if (effect.combo) {
-					effect.combo(this)
-					addMessage(`Effect: ${effect.name} (from ${effect.source})`)
+				for (const effect of this.effects) {
+					if (effect.combo) {
+						effect.combo(this)
+						addMessage(`Effect: ${effect.name} (from ${effect.source})`)
+					}
+				}
+
+				for (const gen of interceptUpdateGenerators) {
+					gen.next?.()
 				}
 			}
 
-			for (const gen of interceptUpdateGenerators) {
-				gen.next?.()
+			// Decrease hand duration for current effects
+			for (const effect of this.effects) {
+				if (effect.handDuration != null) {
+					effect.handDuration -= 1
+				}
 			}
-		}
 
-		// Decrease hand duration for current effects
-		for (const effect of this.effects) {
-			if (effect.handDuration != null) {
-				effect.handDuration -= 1
+			// Remove expired effects
+			this.effects = this.effects.filter((effect) => effect.handDuration !== 0)
+
+			// Add queued effects for next hand
+			this.effects.push(...this.pendingEffects.splice(0))
+
+			// Unmark recent messages so they show dimmed again
+			for (const message of this.messages) {
+				message.recent = false
 			}
-		}
 
-		// Remove expired effects
-		this.effects = this.effects.filter((effect) => effect.handDuration !== 0)
+			// Add new messages as recent
+			this.messages.push(...messages.map((text) => ({ text, recent: true })))
 
-		// Add queued effects for next hand
-		this.effects.push(...this.pendingEffects.splice(0))
-
-		// Unmark recent messages so they show dimmed again
-		for (const message of this.messages) {
-			message.recent = false
-		}
-
-		// Add new messages as recent
-		this.messages.push(...messages.map((text) => ({ text, recent: true })))
-
-		// Update played techniques
-		this.techniqueHistory.push({ technique, round: this.round })
+			// Update played techniques
+			this.techniqueHistory.push({ technique, round: this.round })
+		})
 	}
 
 	nextRound() {
@@ -162,31 +165,49 @@ export class GameState {
 			return
 		}
 
-		this.audience += this.momentum
-		this.cheers += this.audience
+		this.trackChanges(() => {
+			this.audience += this.momentum
+			this.cheers += this.audience
 
-		if (this.round === GameState.maxRounds) {
-			this.status = "complete"
-			return
-		}
+			if (this.round === GameState.maxRounds) {
+				this.status = "complete"
+			} else {
+				this.setback =
+					setbacks[randomInt(setbacks.length)] ?? raise(`no setbacks found`)
+				this.setback.apply?.(this)
 
-		this.setback =
-			setbacks[randomInt(setbacks.length)] ?? raise(`no setbacks found`)
-		this.setback.apply?.(this)
+				for (const effect of this.effects) {
+					if (effect.roundDuration) {
+						effect.roundDuration -= 1
+					}
+				}
+				this.effects = this.effects.filter(
+					(effect) => effect.roundDuration !== 0,
+				)
 
-		for (const effect of this.effects) {
-			if (effect.roundDuration) {
-				effect.roundDuration -= 1
+				this.effects.push(...this.pendingEffects.splice(0))
+
+				this.round += 1
+				this.stamina += GameState.staminaGain
+				this.discardHand()
+				this.draw(GameState.drawCount)
 			}
-		}
-		this.effects = this.effects.filter((effect) => effect.roundDuration !== 0)
+		})
+	}
 
-		this.effects.push(...this.pendingEffects.splice(0))
+	trackChanges(block: () => void) {
+		const startingVariables = pick(this, [
+			"cheers",
+			"audience",
+			"momentum",
+			"stamina",
+		])
 
-		this.round += 1
-		this.stamina += GameState.staminaGain
-		this.discardHand()
-		this.draw(GameState.drawCount)
+		block()
+
+		this.changes = mapValues(startingVariables, (value, key) => {
+			return this[key] - value
+		})
 	}
 
 	addPendingEffect(effect: GameEffect) {

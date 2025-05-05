@@ -1,3 +1,4 @@
+import { startCase } from "es-toolkit"
 import { Box, Text } from "ink"
 import { observer } from "mobx-react-lite"
 import { useState } from "react"
@@ -14,10 +15,23 @@ export const Game = observer(function Game() {
 			</Text>
 
 			<Box flexDirection="column">
-				<Text>Cheers: {state.cheers}</Text>
-				<Text>Audience: {state.audience}</Text>
-				<Text>Momentum: {state.momentum}</Text>
-				<Text>Stamina: {state.stamina}</Text>
+				{(["cheers", "audience", "momentum", "stamina"] as const).map((key) => (
+					<Box key={key} gap={1}>
+						<Text>
+							{startCase(key)}: {state[key]}
+						</Text>
+						{(() => {
+							const delta = state.changes[key]
+							if (delta == null || delta === 0) return
+							return (
+								<Text color={delta > 0 ? "green" : "red"}>
+									({delta > 0 ? "+" : ""}
+									{delta})
+								</Text>
+							)
+						})()}
+					</Box>
+				))}
 			</Box>
 
 			{state.setback && (
