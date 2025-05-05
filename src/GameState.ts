@@ -16,11 +16,23 @@ export type GameEffect = {
 	roundDuration?: number
 	combo?: (state: GameState) => void
 	modifyTechnique?: (technique: Technique) => Partial<Technique>
+
 	/**
-	 * @param current The game object before the update; capture any necessary state in this callback
-	 * @returns A callback which gets called after the update, to make whatever post-update changes are needed
+	 * Allows effects to intercept or modify game state updates, using the `yield`
+	 * keyword to pause until after a game update is executed
+	 *
+	 * @example
+	 * 	const example: GameEffect = {
+	 * 		// ...
+	 * 		*interceptUpdate(state) {
+	 * 			// prevent momentum from increasing
+	 * 			const { momentum } = state
+	 * 			yield
+	 * 			state.momentum = Math.min(state.momentum, momentum)
+	 * 		},
+	 * 	}
 	 */
-	interceptUpdate?: (current: GameState) => (next: GameState) => void
+	interceptUpdate?: (state: GameState) => Generator<void, void, void>
 }
 
 export type GameMessage = {
@@ -95,7 +107,7 @@ export class GameState {
 				messages.push(text + replaySuffix)
 			}
 
-			const interceptUpdatePostCallbacks = this.effects.flatMap(
+			const interceptUpdateGenerators = this.effects.flatMap(
 				(effect) => effect.interceptUpdate?.(this) ?? [],
 			)
 
@@ -109,8 +121,8 @@ export class GameState {
 				}
 			}
 
-			for (const callback of interceptUpdatePostCallbacks) {
-				callback(this)
+			for (const gen of interceptUpdateGenerators) {
+				gen.next()
 			}
 		}
 

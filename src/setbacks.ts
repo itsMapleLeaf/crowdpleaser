@@ -66,11 +66,10 @@ export const setbacks: Setback[] = [
 				name: "No Audience Gain",
 				source: "Small Venue",
 				roundDuration: 1,
-				interceptUpdate(current) {
-					const { audience } = current
-					return (next) => {
-						next.audience = Math.min(audience, next.audience)
-					}
+				*interceptUpdate(game) {
+					const { audience } = game
+					yield
+					game.audience = Math.min(audience, game.audience)
 				},
 			})
 		},
