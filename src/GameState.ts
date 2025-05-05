@@ -1,4 +1,5 @@
 import { range, shuffle } from "es-toolkit"
+import { produce } from "immer"
 import { type Technique, techniques } from "./techniques.ts"
 
 const staminaGain = 3
@@ -15,8 +16,10 @@ export type GameState = Readonly<{
 	stamina: number
 	round: number
 	effects: readonly GameEffect[]
+	pendingEffects: readonly GameEffect[] // new effects that will be applied on following hand
 	playedTechniques: readonly Technique[]
 	// lastSetback?: Setback
+	messages: readonly GameMessage[]
 }>
 
 export type GameEffect = {
@@ -25,6 +28,11 @@ export type GameEffect = {
 	combo?: (state: GameState) => Partial<GameState>
 	interceptUpdate?: (previous: GameState, next: GameState) => Partial<GameState>
 	computeTechnique?: (technique: Technique) => Partial<Technique>
+}
+
+export type GameMessage = {
+	text: string
+	recent?: boolean
 }
 
 export function createGameState(): GameState {
@@ -40,14 +48,18 @@ export function createGameState(): GameState {
 		cheers: 0,
 		round: 1,
 		effects: [],
+		pendingEffects: [],
 		playedTechniques: [],
+		messages: [],
 	}
 }
 
 export function playTechniqueFromHand(
-	state: GameState,
+	currentState: GameState,
 	index: number,
 ): GameState {
+	let state = currentState
+
 	const technique = state.hand[index]
 	if (!technique) {
 		throw new Error(`card at index ${index} does not exist`, {
@@ -55,17 +67,21 @@ export function playTechniqueFromHand(
 		})
 	}
 
-	state = {
-		...state,
-		hand: state.hand.toSpliced(index, 1),
-		deck: [...state.deck, technique],
-		stamina: state.stamina - technique.cost,
-	}
+	state = produce(state, (draft) => {
+		draft.deck.push(...draft.hand.splice(index, 1))
+		draft.stamina -= technique.cost
+	})
 
 	for (const _ of range(technique.replay ?? 1)) {
 		state = { ...state, ...technique.play(state) }
-		// todo: apply combo
+		for (const effect of state.effects) {
+			state = { ...state, ...effect.combo?.(state) }
+		}
 	}
+
+	state = produce(state, (draft) => {
+		draft.effects.push(...draft.pendingEffects.splice(0))
+	})
 
 	return state
 }
@@ -97,10 +113,13 @@ export function passTurn(currentState: GameState): GameState {
 	return state
 }
 
-export function addEffect(state: GameState, effect: GameEffect): GameState {
+export function addPendingEffect(
+	state: GameState,
+	effect: GameEffect,
+): GameState {
 	return {
 		...state,
-		effects: [...state.effects, effect],
+		pendingEffects: [...state.pendingEffects, effect],
 	}
 }
 

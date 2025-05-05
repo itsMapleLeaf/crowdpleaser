@@ -1,5 +1,5 @@
 import {
-	addEffect,
+	addPendingEffect,
 	discardHand,
 	drawCards,
 	energize,
@@ -61,7 +61,7 @@ export const techniques: Technique[] = [
 		cost: 2,
 		description: `Combo: +1 Momentum`,
 		play: (state) => {
-			return addEffect(state, {
+			return addPendingEffect(state, {
 				name: "Combo: +1 Momentum",
 				source: "Patience",
 				combo: (state) => ({ momentum: state.momentum + 1 }),
