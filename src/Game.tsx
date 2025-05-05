@@ -34,26 +34,6 @@ export const Game = observer(function Game() {
 				))}
 			</Box>
 
-			{state.setback && (
-				<Text>
-					Setback: {state.setback.name} ({state.setback.description})
-				</Text>
-			)}
-
-			{state.effects.length > 0 && (
-				<Box flexDirection="column">
-					<Text>Effects:</Text>
-					{state.effects.map((effect, index) => (
-						<Box key={index}>
-							<Text dimColor>{"- "}</Text>
-							<Text>
-								{effect.name} (from {effect.source})
-							</Text>
-						</Box>
-					))}
-				</Box>
-			)}
-
 			{state.status === "playing" ? (
 				<Menu
 					options={[
@@ -105,6 +85,26 @@ export const Game = observer(function Game() {
 					/>
 				</>
 			) : null}
+
+			{state.setback && (
+				<Text>
+					Setback: {state.setback.name} ({state.setback.description})
+				</Text>
+			)}
+
+			{state.effects.length > 0 && (
+				<Box flexDirection="column">
+					<Text>Effects:</Text>
+					{state.effects.map((effect, index) => (
+						<Box key={index}>
+							<Text dimColor>{"- "}</Text>
+							<Text>
+								{effect.name} (from {effect.source})
+							</Text>
+						</Box>
+					))}
+				</Box>
+			)}
 
 			<Box flexDirection="column">
 				{(() => {
