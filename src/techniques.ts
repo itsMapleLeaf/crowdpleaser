@@ -1,6 +1,5 @@
 import { type GameState } from "./GameState.ts"
 import type { MaybeFunction } from "./types.ts"
-import { count } from "./utils.ts"
 
 export type Technique = {
 	name: string
@@ -174,16 +173,12 @@ export const techniques: TechniqueResolvable[] = [
 		}
 	},
 	(state) => {
-		const playedThisRound = count(
-			state.techniqueHistory,
-			(entry) => entry.round === state.round,
-		)
 		return {
 			name: "Push Yourself",
-			cost: 0,
-			description: `+1 stamina for each technique played this round (${playedThisRound})`,
+			cost: 1,
+			description: `+1 stamina for each technique played this game (${state.techniqueHistory.length + 1})`,
 			play: () => {
-				state.stamina += playedThisRound
+				state.stamina += state.techniqueHistory.length
 			},
 		}
 	},
