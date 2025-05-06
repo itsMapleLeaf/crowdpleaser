@@ -102,9 +102,6 @@ export class GameState {
 		}
 
 		this.trackChanges(() => {
-			this.deck.push(...this.baseHand.splice(index, 1))
-			this.stamina -= technique.cost
-
 			const messages: string[] = []
 
 			for (const replayNumber of range(technique.replay ?? 1)) {
@@ -156,6 +153,9 @@ export class GameState {
 
 			// Update played techniques
 			this.techniqueHistory.push({ technique, round: this.round })
+
+			this.deck.push(...this.baseHand.splice(index, 1))
+			this.stamina -= technique.cost
 		})
 	}
 

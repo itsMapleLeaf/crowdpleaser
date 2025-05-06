@@ -176,7 +176,7 @@ export const techniques: TechniqueResolvable[] = [
 		return {
 			name: "Push Yourself",
 			cost: 1,
-			description: `+1 stamina for each technique played this game (${state.techniqueHistory.length + 1})`,
+			description: `+1 stamina for each technique played this game (${state.techniqueHistory.length})`,
 			play: () => {
 				state.stamina += state.techniqueHistory.length
 			},
