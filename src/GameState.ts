@@ -110,7 +110,7 @@ export class GameState {
 			for (const replayNumber of range(technique.replay ?? 1)) {
 				const addMessage = (text: string) => {
 					const replaySuffix =
-						replayNumber != null ? ` (Replay ${replayNumber + 1})` : ""
+						replayNumber > 0 ? ` (Replay ${replayNumber + 1})` : ""
 					messages.push(text + replaySuffix)
 				}
 
