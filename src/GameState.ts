@@ -155,7 +155,7 @@ export class GameState {
 			this.techniqueHistory.push({ technique, round: this.round })
 
 			this.deck.push(...this.baseHand.splice(index, 1))
-			this.stamina -= technique.cost
+			this.stamina = Math.max(0, this.stamina - technique.cost)
 		})
 	}
 

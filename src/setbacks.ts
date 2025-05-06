@@ -16,11 +16,12 @@ export const setbacks: Setback[] = [
 	},
 	{
 		name: "Trying Too Hard",
-		description: `Combo: Decrease audience by momentum`,
+		description: `Combo: Decrease audience by momentum this round`,
 		apply: (state) => {
 			state.addPendingEffect({
-				name: "Combo: Decrease audience by momentum",
+				name: "Combo: Decrease audience by momentum this round",
 				source: "Trying Too Hard",
+				roundDuration: 1,
 				combo: (state) => {
 					state.audience -= state.momentum
 				},
@@ -51,11 +52,12 @@ export const setbacks: Setback[] = [
 	},
 	{
 		name: "Exhaustion",
-		description: `Combo: -1 stamina`,
+		description: `Combo: -1 stamina this round`,
 		apply: (state) => {
 			state.addPendingEffect({
 				name: "Combo: -1 Stamina",
 				source: "Exhaustion",
+				roundDuration: 1,
 				combo: (state) => {
 					state.stamina = Math.max(0, state.stamina - 1)
 				},

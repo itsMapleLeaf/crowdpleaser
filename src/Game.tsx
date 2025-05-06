@@ -34,6 +34,11 @@ export const Game = observer(function Game() {
 				))}
 			</Box>
 
+			<Text>
+				Setback: {state.setback?.name ?? "(None)"}{" "}
+				{state.setback && `(${state.setback.description})`}
+			</Text>
+
 			{state.status === "playing" ? (
 				<Menu
 					options={[
@@ -85,12 +90,6 @@ export const Game = observer(function Game() {
 					/>
 				</>
 			) : null}
-
-			{state.setback && (
-				<Text>
-					Setback: {state.setback.name} ({state.setback.description})
-				</Text>
-			)}
 
 			{state.effects.length > 0 && (
 				<Box flexDirection="column">

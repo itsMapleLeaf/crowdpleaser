@@ -86,7 +86,7 @@ export const techniques: TechniqueResolvable[] = [
 	},
 	{
 		name: "Hype",
-		cost: 2,
+		cost: 3,
 		description: `Replay 2: Energize`,
 		replay: 2,
 		play: (state) => {
