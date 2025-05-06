@@ -172,10 +172,6 @@ export class GameState {
 			if (this.round === GameState.maxRounds) {
 				this.status = "complete"
 			} else {
-				this.setback =
-					setbacks[randomInt(setbacks.length)] ?? raise(`no setbacks found`)
-				this.setback.apply?.(this)
-
 				for (const effect of this.effects) {
 					if (effect.roundDuration) {
 						effect.roundDuration -= 1
@@ -191,6 +187,10 @@ export class GameState {
 				this.stamina += GameState.staminaGain
 				this.discardHand()
 				this.draw(GameState.drawCount)
+
+				this.setback =
+					setbacks[randomInt(setbacks.length)] ?? raise(`no setbacks found`)
+				this.setback.apply?.(this)
 			}
 		})
 	}
