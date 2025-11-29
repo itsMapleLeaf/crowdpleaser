@@ -29,13 +29,19 @@ export function Menu({
 
 	return (
 		<Box flexDirection="column">
-			{options.map((option, index) => (
-				<Text
-					key={index}
-					color={index === currentIndex ? "blue" : undefined}
-					dimColor={option.disabled}
-				>{`> ${option.label}`}</Text>
-			))}
+			{options.map((option, index) => {
+				const isCurrent = index === currentIndex
+				return (
+					<Text
+						key={index}
+						color={isCurrent ? "blue" : undefined}
+						dimColor={option.disabled}
+					>
+						{isCurrent ? "> " : "  "}
+						{option.label}
+					</Text>
+				)
+			})}
 		</Box>
 	)
 }
