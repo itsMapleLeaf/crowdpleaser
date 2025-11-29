@@ -34,25 +34,29 @@ export const Game = observer(function Game() {
 				))}
 			</Box>
 
-			<Text>
-				Setback: {state.setback?.name ?? "(None)"}{" "}
-				{state.setback && `(${state.setback.description})`}
-			</Text>
-
 			{state.status === "playing" ? (
-				<Menu
-					options={[
-						...state.resolvedHand.map((card, index) => ({
-							label: `${card.name} (${card.cost}): ${card.description}`,
-							disabled: card.cost > state.stamina,
-							action: () => state.playTechniqueFromHand(index),
-						})),
-						{
-							label: "Next Round",
-							action: () => state.nextRound(),
-						},
-					]}
-				/>
+				<>
+					<Text>
+						Setback: {state.setback?.name ?? "(None)"}{" "}
+						{state.setback && `(${state.setback.description})`}
+					</Text>
+					<Menu
+						options={[
+							...state.resolvedHand.map((card, index) => ({
+								label: `${card.name} (${card.cost}): ${card.description}`,
+								disabled: card.cost > state.stamina,
+								action: () => state.playTechniqueFromHand(index),
+							})),
+							{
+								label:
+									state.round < GameState.maxRounds
+										? "Next Round"
+										: "Finish Performance",
+								action: () => state.nextRound(),
+							},
+						]}
+					/>
+				</>
 			) : state.status === "complete" ? (
 				<>
 					<Text color="green">Performance complete!</Text>
