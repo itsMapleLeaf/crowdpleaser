@@ -9,7 +9,7 @@ export type Technique = {
 	play: (state: GameState) => void
 }
 
-export type TechniqueResolvable = MaybeFunction<[state: GameState], Technique>
+export type TechniqueResolvable = MaybeFunction<Technique, [state: GameState]>
 
 export const techniques: TechniqueResolvable[] = [
 	// bocchi (focus: techniques)
